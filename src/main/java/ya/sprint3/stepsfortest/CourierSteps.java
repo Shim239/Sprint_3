@@ -62,7 +62,7 @@ public class CourierSteps {
             System.out.println("Курьер с такими данными уже существует! Авторизуйтесь.");
             return true;
         } else {
-            System.out.println("Курьера с такими данными не существует! Можно регистрироваться.");
+            System.out.println("Курьера с такими данными не существует!");
             return false;
         }
     }
@@ -75,9 +75,9 @@ public class CourierSteps {
      */
     @Step("Удаляем курьера")
     public ValidatableResponse deleteCourier(Courier courier) {
-        int courierId = loginCourier(courier.getLogin(), courier.getPassword())
-                .extract().body().path("id");
-        courier.setId(String.valueOf(courierId));
+            int courierId = loginCourier(courier.getLogin(), courier.getPassword())
+                    .extract().body().path("id");
+            courier.setId(String.valueOf(courierId));
         return courierApi.deleteCourier(courier);
     }
 }

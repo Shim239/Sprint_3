@@ -15,7 +15,7 @@ public enum HttpStatus {
     CONFLICT(409),
     INTERNAL_SERVER_ERROR(500),
     BAD_GATEWAY(502),
-    SERVICE_UNAVALIABLE(503);
+    SERVICE_UNAVAILABLE(503);
 
     private final int value;
 

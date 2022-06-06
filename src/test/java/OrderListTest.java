@@ -19,15 +19,15 @@ public class OrderListTest {
     @Before
     public void setup() {
         orderSteps = new OrderSteps();
+        apiSettings.pingServer();
     }
 
     @Test
     @DisplayName("Получение списка заказов")
     @Description("Получение списка заказов")
     public void getOrderList() {
-        apiSettings.pingServer();
         ValidatableResponse response = orderSteps.getOrderListResponse();
-        assertEquals(response.extract().statusCode(), HttpStatus.OK.getValue());
+        assertEquals(HttpStatus.OK.getValue(), response.extract().statusCode());
         List<String> orders = response.extract().body().path("orders");
         assertNotNull(orders);
     }

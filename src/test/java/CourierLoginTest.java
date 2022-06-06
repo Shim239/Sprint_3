@@ -1,4 +1,5 @@
 import io.qameta.allure.junit4.DisplayName;
+import org.junit.After;
 import ya.sprint3.api.ApiSettings;
 import ya.sprint3.api.HttpStatus;
 import io.restassured.RestAssured;
@@ -12,70 +13,65 @@ import ya.sprint3.objects.Courier;
 import static org.junit.Assert.*;
 
 public class CourierLoginTest {
+    Courier courier;
     ApiSettings apiSettings = new ApiSettings();
     CourierSteps courierSteps = new CourierSteps();
 
     @Before
     public void setUp() {
         RestAssured.baseURI = "http://qa-scooter.praktikum-services.ru";
+        apiSettings.pingServer();
+        courier = courierSteps.createCourierWithRandomParameters();
     }
 
     @Test
     @DisplayName("Курьер может авторизоваться")
     @Description("Курьер может авторизоваться")
     public void checkCourierCanLogIn() {
-        apiSettings.pingServer();
-        Courier courier;
-        courier = courierSteps.createCourierWithRandomParameters();
         ValidatableResponse createNewCourierResponse = courierSteps.createNewCourier(courier);
-        assertEquals(createNewCourierResponse.extract().statusCode(), HttpStatus.CREATED.getValue());
+        assertEquals(HttpStatus.CREATED.getValue(), createNewCourierResponse.extract().statusCode());
 
         ValidatableResponse logInCourier = courierSteps.loginCourier(courier.getLogin(), courier.getPassword());
-        assertEquals(logInCourier.extract().statusCode(), HttpStatus.OK.getValue());
+        assertEquals(HttpStatus.OK.getValue(), logInCourier.extract().statusCode());
         int courierId = logInCourier.extract().body().path("id");
         assertTrue(courierId > 0);
-
-        courierSteps.deleteCourier(courier);
     }
 
     @Test
     @DisplayName("Попытка авторизации курьера без логина")
     @Description("Попытка авторизации курьера без логина")
     public void checkCourierLogInWithoutLogin() {
-        apiSettings.pingServer();
-        Courier courier;
-        courier = courierSteps.createCourierWithRandomParameters();
-
         courier.setLogin(null);
         ValidatableResponse logInCourierWithoutData = courierSteps.loginCourier(courier.getLogin(), courier.getPassword());
-        assertEquals(logInCourierWithoutData.extract().statusCode(), HttpStatus.BAD_REQUEST.getValue());
-        assertEquals(logInCourierWithoutData.extract().body().path("message"), "Недостаточно данных для входа");
+        assertEquals(HttpStatus.BAD_REQUEST.getValue(), logInCourierWithoutData.extract().statusCode());
+        assertEquals("Недостаточно данных для входа", logInCourierWithoutData.extract().body().path("message"));
     }
 
     @Test
     @DisplayName("Попытка авторизации курьера без пароля")
     @Description("Попытка авторизации курьера без пароля")
     public void checkCourierLogInWithoutPassword() {
-        apiSettings.pingServer();
-        Courier courier;
-        courier = courierSteps.createCourierWithRandomParameters();
-
         courier.setPassword(null);
         ValidatableResponse logInCourierWithoutData = courierSteps.loginCourier(courier.getLogin(), courier.getPassword());
-        assertEquals(logInCourierWithoutData.extract().statusCode(), HttpStatus.BAD_REQUEST.getValue());
-        assertEquals(logInCourierWithoutData.extract().body().path("message"), "Недостаточно данных для входа");
+        assertEquals(HttpStatus.BAD_REQUEST.getValue(), logInCourierWithoutData.extract().statusCode());
+        assertEquals("Недостаточно данных для входа", logInCourierWithoutData.extract().body().path("message"));
     }
 
     @Test
     @DisplayName("Попытка авторизации несуществующего курьера")
     @Description("Попытка авторизации несуществующего курьера")
     public void checkCourierAuthWithIncorrectLogin() {
-        apiSettings.pingServer();
-        Courier courier;
-        courier = courierSteps.createCourierWithRandomParameters();
         assertFalse(courierSteps.checkCourierExists(courier.getLogin(), courier.getPassword()));
         ValidatableResponse response = courierSteps.loginCourier(courier.getLogin(), courier.getPassword());
-        assertEquals(response.extract().statusCode(), HttpStatus.NOT_FOUND.getValue());
-        assertEquals(response.extract().body().path("message"), "Учетная запись не найдена");
+        assertEquals(HttpStatus.NOT_FOUND.getValue(), response.extract().statusCode());
+        assertEquals("Учетная запись не найдена", response.extract().body().path("message"));
+    }
+
+    @After
+    public void clearData() {
+        if (courierSteps.checkCourierExists(courier.getLogin(), courier.getPassword())) {
+            courierSteps.deleteCourier(courier);
+        }
+        assertFalse(courierSteps.checkCourierExists(courier.getLogin(), courier.getPassword()));
     }
 }

@@ -28,6 +28,7 @@ public class OrderCreateParametrizedTest {
     @Before
     public void setup() {
         orderSteps = new OrderSteps();
+        apiSettings.pingServer();
     }
 
     @Parameterized.Parameters(name = "Цвет в заказе: {1}")
@@ -44,11 +45,10 @@ public class OrderCreateParametrizedTest {
     @DisplayName("Создание нового заказа с разными вариантами цветов")
     @Description("Создание нового заказа с разными вариантами цветов")
     public void createNewOrderWithColor() throws IOException, InterruptedException {
-        apiSettings.pingServer();
         Order order = orderSteps.getOrderWithRandomData();
         order.setColor(color);
         ValidatableResponse response = orderSteps.createNewOrderResponse(order);
-        assertEquals(response.extract().statusCode(), HttpStatus.CREATED.getValue());
+        assertEquals(HttpStatus.CREATED.getValue(), response.extract().statusCode());
         int trackOrder = response.extract().body().path("track");
         assertTrue(trackOrder > 0);
     }
